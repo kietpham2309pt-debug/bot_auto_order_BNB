@@ -37,7 +37,9 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'invalid_body' });
   }
 
-  const headerSig = req.headers['x-haravan-hmac-sha256'] || req.headers['X-Haravan-Hmac-Sha256'];
+  const headerSig =
+    req.headers['x-haravan-hmacsha256'] ||
+    req.headers['x-haravan-hmac-sha256'];
   if (!verifyHmac(rawBody, headerSig)) {
     console.warn('[webhook] HMAC verification failed');
     return res.status(401).json({ error: 'invalid_signature' });
