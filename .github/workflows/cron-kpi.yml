@@ -1,0 +1,55 @@
+name: KPI Cron (Vercel)
+
+# Trigger 3 lần/ngày theo giờ VN (UTC+7):
+#   10:00 VN = 03:00 UTC  -> morning
+#   14:00 VN = 07:00 UTC  -> midshift
+#   22:00 VN = 15:00 UTC  -> evening
+# GitHub Actions cron có thể trễ 5-15 phút trong giờ cao điểm — chấp nhận được cho KPI.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+    - cron: '0 7 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Chọn cron để chạy thủ công'
+        required: true
+        default: 'morning'
+        type: choice
+        options: [morning, midshift, evening]
+
+env:
+  BOT_URL: https://botautoorderbnb-livid.vercel.app
+
+jobs:
+  morning:
+    if: github.event.schedule == '0 3 * * *' || (github.event_name == 'workflow_dispatch' && inputs.target == 'morning')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/cron/morning
+        run: |
+          curl -fsSL --retry 3 --max-time 30 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ env.BOT_URL }}/api/cron/morning"
+
+  midshift:
+    if: github.event.schedule == '0 7 * * *' || (github.event_name == 'workflow_dispatch' && inputs.target == 'midshift')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/cron/midshift
+        run: |
+          curl -fsSL --retry 3 --max-time 30 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ env.BOT_URL }}/api/cron/midshift"
+
+  evening:
+    if: github.event.schedule == '0 15 * * *' || (github.event_name == 'workflow_dispatch' && inputs.target == 'evening')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/cron/evening
+        run: |
+          curl -fsSL --retry 3 --max-time 30 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ env.BOT_URL }}/api/cron/evening"
