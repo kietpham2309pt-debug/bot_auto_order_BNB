@@ -32,11 +32,7 @@ const config = {
     port: parseInt(optional('PORT', '3001'), 10),
     timezone: optional('TIMEZONE', 'Asia/Ho_Chi_Minh')
   },
-  cron: {
-    morning: optional('CRON_KPI_MORNING', '0 10 * * *'),
-    midshift: optional('CRON_KPI_MIDSHIFT', '0 14 * * *'),
-    evening: optional('CRON_KPI_EVENING', '0 22 * * *')
-  }
+  cronSecret: optional('CRON_SECRET', '')
 };
 
 module.exports = config;

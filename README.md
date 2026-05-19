@@ -1,36 +1,60 @@
-# BNB Haravan Telegram Bot
+# BNB Haravan Telegram Bot (Vercel)
 
-Bot Telegram cho BNB:
-- Nhận webhook đơn mới từ Haravan và gửi tin nhắn vào nhóm Telegram
-- Gửi báo cáo KPI tự động vào 10h sáng, 14h (giữa ca), 22h tối hằng ngày
+Bot Telegram cho BNB, deploy serverless trên Vercel:
+- Nhận webhook đơn mới từ Haravan → gửi tin vào nhóm Telegram
+- Cron 10h / 14h / 22h (giờ VN) gửi báo cáo KPI tháng — trigger bởi cron-job.org
 
-## Quick start
+## Quick deploy
 
-```bash
+1. **Push code lên GitHub** (đã xong).
+2. Vào https://vercel.com/new → Import repo `bot_auto_order_BNB`.
+3. Trong tab **Environment Variables**, paste hết các biến từ `.env.example` (giá trị thực, sinh `CRON_SECRET` ngẫu nhiên).
+4. Bấm **Deploy** → có URL `https://<project>.vercel.app`.
+5. **Đăng webhook Haravan** với URL:
+   ```
+   https://<project>.vercel.app/webhook/haravan/orders
+   ```
+6. **Setup cron** trên https://cron-job.org (miễn phí, không cần tài khoản trả phí):
+   - Job 1: GET `https://<project>.vercel.app/api/cron/morning?key=<CRON_SECRET>` — schedule `0 10 * * *` (10h VN, hoặc `0 3 * * *` UTC)
+   - Job 2: GET `https://<project>.vercel.app/api/cron/midshift?key=<CRON_SECRET>` — schedule `0 14 * * *` (14h VN)
+   - Job 3: GET `https://<project>.vercel.app/api/cron/evening?key=<CRON_SECRET>` — schedule `0 22 * * *` (22h VN)
+
+Xem hướng dẫn chi tiết tại [`docs/SETUP.md`](docs/SETUP.md).
+
+## Test local
+
+```powershell
 npm install
 cp .env.example .env
 # Sửa .env với token thật
-npm start
+node scripts/test-order.js     # gửi tin đơn hàng giả lên Telegram
+node scripts/test-kpi.js       # pull số liệu thật từ Haravan và gửi 3 tin KPI
 ```
 
-Xem hướng dẫn chi tiết tại [`docs/SETUP.md`](docs/SETUP.md):
-1. Tạo Telegram bot và lấy chat_id
-2. Đăng ký webhook trên Haravan
-3. Chạy local (test với ngrok)
-4. Deploy lên VPS với PM2 + Nginx
+Chạy thử Vercel local:
+```powershell
+npm install -g vercel
+vercel dev
+```
 
 ## Cấu trúc
 
 ```
-src/
-├── index.js        # entry point: express + scheduler
-├── config.js       # load .env + validate
-├── telegram.js     # gửi tin qua Bot API
-├── haravan.js      # gọi Haravan REST API
-├── formatters.js   # format tin đơn mới + KPI
-├── kpi.js          # tính doanh thu MTD, % hoàn thành...
-├── webhook.js      # POST /webhook/haravan/orders
-└── scheduler.js    # cron 10h/14h/22h
+api/
+├── index.js                       # GET / — health check
+├── webhook/haravan/orders.js      # POST /webhook/haravan/orders
+└── cron/
+    ├── morning.js                 # GET /api/cron/morning
+    ├── midshift.js                # GET /api/cron/midshift
+    └── evening.js                 # GET /api/cron/evening
 
-docs/SETUP.md       # hướng dẫn từ A-Z
+src/
+├── config.js                      # load env + validate
+├── telegram.js                    # gọi Telegram Bot API
+├── haravan.js                     # gọi Haravan REST API
+├── formatters.js                  # format tin đơn mới + KPI
+├── kpi.js                         # tính doanh thu MTD, % hoàn thành...
+└── cron-handler.js                # shared logic cho 3 cron endpoint
+
+vercel.json                        # rewrites /webhook/* → /api/webhook/*
 ```

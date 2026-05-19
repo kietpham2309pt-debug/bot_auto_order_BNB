@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/webhook/haravan/orders", "destination": "/api/webhook/haravan/orders" }
+  ]
+}
