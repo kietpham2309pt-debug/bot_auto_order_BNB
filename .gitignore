@@ -10,3 +10,6 @@ npm-debug.log*
 logs/
 pm2.log
 *.tgz
+
+.vercel
+.env*.local
