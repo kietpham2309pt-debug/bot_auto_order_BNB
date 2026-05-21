@@ -1,16 +1,14 @@
-name: KPI Cron (Vercel)
+name: KPI Cron (Vercel) - Manual fallback
 
-# Trigger 3 lần/ngày theo giờ VN (UTC+7):
-#   10:00 VN = 03:00 UTC  -> morning
-#   14:00 VN = 07:00 UTC  -> midshift
-#   22:00 VN = 15:00 UTC  -> evening
-# GitHub Actions cron có thể trễ 5-15 phút trong giờ cao điểm — chấp nhận được cho KPI.
+# Lịch tự động đã chuyển sang cron-job.org (chính xác hơn, không bị trễ 2-3h như GitHub Actions).
+# Workflow này GIỮ LẠI để chạy tay khi cần (Actions tab -> Run workflow -> chọn target).
+#
+# 3 jobs trên cron-job.org (timezone Asia/Ho_Chi_Minh):
+#   jobId 7640833 - Morning  10:00 VN
+#   jobId 7640834 - Midshift 14:00 VN
+#   jobId 7640835 - Evening  22:00 VN
 
 on:
-  schedule:
-    - cron: '0 3 * * *'
-    - cron: '0 7 * * *'
-    - cron: '0 15 * * *'
   workflow_dispatch:
     inputs:
       target:
@@ -25,7 +23,7 @@ env:
 
 jobs:
   morning:
-    if: github.event.schedule == '0 3 * * *' || (github.event_name == 'workflow_dispatch' && inputs.target == 'morning')
+    if: inputs.target == 'morning'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger /api/cron/morning
@@ -35,7 +33,7 @@ jobs:
             "${{ env.BOT_URL }}/api/cron/morning"
 
   midshift:
-    if: github.event.schedule == '0 7 * * *' || (github.event_name == 'workflow_dispatch' && inputs.target == 'midshift')
+    if: inputs.target == 'midshift'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger /api/cron/midshift
@@ -45,7 +43,7 @@ jobs:
             "${{ env.BOT_URL }}/api/cron/midshift"
 
   evening:
-    if: github.event.schedule == '0 15 * * *' || (github.event_name == 'workflow_dispatch' && inputs.target == 'evening')
+    if: inputs.target == 'evening'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger /api/cron/evening
