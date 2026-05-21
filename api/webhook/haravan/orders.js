@@ -45,19 +45,17 @@ module.exports = async (req, res) => {
     return res.status(401).json({ error: 'invalid_signature' });
   }
 
-  res.status(200).json({ ok: true });
-
   let order;
   try {
     order = JSON.parse(rawBody.toString('utf8'));
   } catch (err) {
     console.error('[webhook] invalid JSON:', err.message);
-    return;
+    return res.status(200).json({ ok: true });
   }
 
   if (!order || !order.id) {
     console.warn('[webhook] payload thiếu id, bỏ qua');
-    return;
+    return res.status(200).json({ ok: true });
   }
 
   try {
@@ -67,6 +65,8 @@ module.exports = async (req, res) => {
   } catch (err) {
     console.error('[webhook] lỗi gửi telegram:', err.message);
   }
+
+  return res.status(200).json({ ok: true });
 };
 
 module.exports.config = {
